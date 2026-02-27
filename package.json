@@ -29,14 +29,12 @@
 		"testonly": "jest"
 	},
 	"dependencies": {
-		"@babel/runtime-corejs2": "^7.0.0",
-		"form-data": "4.0.2",
+		"@babel/runtime-corejs3": "^7.25.0",
 		"https-proxy-agent": "7.0.6",
-		"node-fetch": "2.7.0",
 		"node-pushnotifications": "3.1.1",
-		"nodemailer": "6.9.10",
+		"nodemailer": "^6.9.16",
 		"web-push": "3.6.7",
-		"winston": "3.17.0"
+		"winston": "^3.15.0"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.0.0",
