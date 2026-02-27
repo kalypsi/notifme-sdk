@@ -13,11 +13,12 @@
     "build": "yarn run clean && babel src --out-dir lib && yarn run build-dot-flow",
     "build-dot-flow": "grep -rwl './src' -e 'export type' | while read filepath; do cp $filepath `echo $filepath | sed 's/\\/src\\//\\/lib\\//g'`.flow; done",
     "clean": "rm -rf lib/ coverage/",
-    "demo": "notification-catcher & babel-node examples/with-notification-catcher.js && printf '\n>>> Please visit http://localhost:1080 <<<\n\n'",
+    "demo": "babel-node examples/demo.js",
     "dev": "nodemon -e js -r babel-register examples/with-notification-catcher.js",
     "lint": "yarn run flow && standard",
     "lint-fix": "standard --fix",
-    "prepublish": "yarn run build",
+    "prepare": "yarn run build",
+    "prepack": "yarn run build",
     "run-catcher": "notification-catcher",
     "semantic-release": "semantic-release",
     "size": "echo 'Notif.me build size:' && du -hs lib/ && cost-of-modules --yarn",
@@ -99,6 +100,7 @@
   },
   "release": {
     "branches": [
+      "main",
       "master"
     ],
     "plugins": [
@@ -117,11 +119,6 @@
           "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
         }
       ]
-    ]
-  },
-  "greenkeeper": {
-    "ignore": [
-      "flow-bin"
     ]
   }
 }

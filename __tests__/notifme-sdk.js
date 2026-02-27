@@ -142,3 +142,15 @@ test('mergeWithDefaultConfig should ignore config if useNotificationCatcher is t
     }
   })
 })
+
+test('useNotificationCatcher should be disabled in production by default.', () => {
+  const previousNodeEnv = process.env.NODE_ENV
+  delete process.env.NOTIFME_ALLOW_CATCHER_IN_PROD
+  process.env.NODE_ENV = 'production'
+
+  expect(() => new NotifmeSdk({ useNotificationCatcher: true })).toThrow(
+    'Notification catcher is disabled in production. Set NOTIFME_ALLOW_CATCHER_IN_PROD=true to override.'
+  )
+
+  process.env.NODE_ENV = previousNodeEnv
+})

@@ -1,6 +1,7 @@
 /* @flow */
 import fetch from '../../util/request'
 import FormData from 'form-data'
+import { assertSafeUrl } from '../../util/security'
 // types
 import type { EmailRequestType } from '../../models/notification-request'
 
@@ -39,7 +40,12 @@ export default class EmailMailgunProvider {
     if (id) form.append('v:Notification-Id', id)
     if (userId) form.append('v:User-Id', userId)
 
-    const response = await fetch(`https://${this.host}/${this.version}/${this.domainName}/messages`, {
+    const endpoint = assertSafeUrl(
+      `https://${this.host}/${this.version}/${this.domainName}/messages`,
+      'Mailgun API'
+    )
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${this.apiKeyBase64}`,
