@@ -26,6 +26,7 @@ function isCatcherHealthy () {
     })
     req.on('error', () => resolve(false))
     req.setTimeout(1000, () => {
+      // $FlowIgnore - destroy exists at runtime
       req.destroy()
       resolve(false)
     })

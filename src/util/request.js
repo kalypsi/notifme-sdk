@@ -1,4 +1,5 @@
 /* @flow */
+/* global AbortController */
 import fetch from 'node-fetch'
 import HttpsProxyAgent from 'https-proxy-agent'
 
@@ -41,6 +42,7 @@ export default async (url: string, { ...options }: Object = {}) => {
 
   while (attempt <= retries) {
     if (!options.signal) {
+      // $FlowIgnore - AbortController is a global in Node 16+
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), getTimeoutMs())
       options.signal = controller.signal
