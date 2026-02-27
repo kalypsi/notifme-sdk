@@ -28,6 +28,10 @@ export type SmsProviderType = {
   apiKey: string,
   apiSecret: string
 } | {
+  type: 'vonage', // alias for nexmo
+  apiKey: string,
+  apiSecret: string
+} | {
   type: 'ovh',
   appKey: string,
   appSecret: string,

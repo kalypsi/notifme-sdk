@@ -2,7 +2,7 @@ name: Publish Package
 
 on:
   push:
-    branches: [master]
+    branches: [main, master]
   workflow_run:
     workflows: ["Dependabot auto-merge"]
     types: [completed]

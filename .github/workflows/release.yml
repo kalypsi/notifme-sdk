@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci-test.yml
+
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          registry-url: "https://registry.npmjs.org"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create changeset if needed
+        id: changeset
+        run: |
+          if [ -n "$(git status --porcelain .changeset/)" ]; then
+            echo "has_changeset=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changeset=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Version & Publish
+        if: steps.changeset.outputs.has_changeset == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: yarn release
+
+      - name: Skip Release (no changeset)
+        if: steps.changeset.outputs.has_changeset == 'false'
+        run: echo "No changeset found - skipping release"

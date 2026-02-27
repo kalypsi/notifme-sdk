@@ -41,8 +41,8 @@ test('Sender should send all notifications.', async () => {
   expect(providers.email[0].send).toBeCalledWith({ ...metadata, ...request.email })
   expect(logger.warn).toBeCalledWith('No provider registered for channel "push". Using logger.')
   expect(logger.info).toBeCalledWith('[PUSH] Sent by "push-logger-provider":')
-  expect(logger.info).toBeCalledWith({ id: '24', registrationToken: 'xxxxx', title: 'Hi John', body: 'Hello John! How are you?' })
-  expect(logger.warn).toBeCalledWith('webpush-provider', new Error('webpush test error'))
+  expect(logger.info).toBeCalledWith({ id: '24', registrationToken: '***', title: 'Hi John', body: 'Hello John! How are you?' })
+  expect(logger.warn).toBeCalledWith('[webpush-provider] webpush test error')
   expect(result).toEqual({
     status: 'error',
     channels: {

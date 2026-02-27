@@ -1,5 +1,6 @@
 /* @flow */
 import fetch from '../../util/request'
+import { assertSafeUrl } from '../../util/security'
 // Types
 import type { WhatsappRequestType } from '../../models/notification-request'
 
@@ -30,7 +31,8 @@ export default class WhatsappInfobipProvider {
       ...rest
     }
 
-    const response = await fetch(`${this.baseUrl}/whatsapp/1/message/${type}`, {
+    const endpoint = assertSafeUrl(`${this.baseUrl}/whatsapp/1/message/${type}`, 'WhatsApp provider')
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

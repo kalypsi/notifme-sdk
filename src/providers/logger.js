@@ -1,5 +1,7 @@
 /* @flow */
+import crypto from 'crypto'
 import logger from '../util/logger'
+import { redactSensitive } from '../util/security'
 // Types
 import type { ChannelType } from '../index'
 import type { RequestType } from '../models/notification-request'
@@ -15,7 +17,7 @@ export default class LoggerProvider {
 
   async send (request: RequestType): Promise<string> {
     logger.info(`[${this.channel.toUpperCase()}] Sent by "${this.id}":`)
-    logger.info(request)
-    return `id-${Math.round(Math.random() * 1000000000)}`
+    logger.info(redactSensitive(request))
+    return `id-${crypto.randomBytes(16).toString('hex')}`
   }
 }

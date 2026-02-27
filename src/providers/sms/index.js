@@ -45,6 +45,7 @@ export default function factory ({ type, ...config }: Object): SmsProviderType {
       return new SmsInfobipProvider(config)
 
     case 'nexmo':
+    case 'vonage':
       return new SmsNexmoProvider(config)
 
     case 'ovh':

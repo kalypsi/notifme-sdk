@@ -68,6 +68,20 @@ $ yarn add --dev notification-catcher
 $ yarn run notification-catcher
 ```
 
+Or run the built-in demo helper (it reuses an existing healthy catcher if one is already running):
+
+```shell
+$ yarn demo
+```
+
+Note: Notification Catcher currently depends on old SMTP packages and can fail on Node 22+.
+In that case `yarn demo` automatically falls back to the logger demo.
+To force catcher mode anyway, run:
+
+```shell
+$ NOTIFME_DEMO_FORCE_CATCHER=true yarn demo
+```
+
 ```javascript
 import NotifmeSdk from 'notifme-sdk'
 
@@ -159,6 +173,17 @@ If you want to use a HTTP proxy, set an environment variable `NOTIFME_HTTP_PROXY
 $ # Example
 $ NOTIFME_HTTP_PROXY=http://127.0.0.1:8580 node your-script-using-notifme.js
 ```
+
+#### Runtime safety options
+
+You can tune runtime safety and resiliency with these environment variables:
+
+- `NOTIFME_HTTP_TIMEOUT_MS` (default: `10000`)
+- `NOTIFME_HTTP_RETRIES` (default: `0`)
+- `NOTIFME_HTTP_RETRY_DELAY_MS` (default: `250`)
+- `NOTIFME_ALLOWED_HOSTS` (optional CSV allowlist like `hooks.slack.com,*.api.infobip.com`)
+- `NOTIFME_ALLOW_INSECURE_URLS=true` (allows non-HTTPS URLs)
+- `NOTIFME_ALLOW_CATCHER_IN_PROD=true` (allows Notification Catcher in production)
 
 ### 2. Providers
 
@@ -410,14 +435,14 @@ new NotifmeSdk({
 })
 ```
 </p></details>
-<details><summary>Nexmo</summary><p>
+<details><summary>Vonage (Nexmo compatibility)</summary><p>
 
 ```javascript
 new NotifmeSdk({
   channels: {
     sms: {
       providers: [{
-        type: 'nexmo',
+        type: 'vonage', // 'nexmo' is still supported for backwards compatibility
         apiKey: 'xxxxx',
         apiSecret: 'xxxxx'
       }]
