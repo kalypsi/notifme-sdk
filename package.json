@@ -1,5 +1,5 @@
 {
-	"name": "@kalypsi-platform/notifme-sdk",
+	"name": "notifme-sdk",
 	"version": "1.1.0",
 	"description": "Unified notification SDK (emails, SMS, pushes, webpushes...) for Node.js",
 	"publishConfig": {
@@ -9,7 +9,7 @@
 	"main": "lib/index.js",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/notifme/notifme-sdk.git"
+		"url": "git+https://github.com/kalypsi/notifme-sdk.git"
 	},
 	"author": "Notif.me",
 	"license": "MIT",
