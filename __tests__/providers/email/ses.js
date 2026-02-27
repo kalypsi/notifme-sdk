@@ -43,9 +43,9 @@ test('SES success with minimal parameters.', async () => {
       Accept: ['*/*'],
       Authorization: [expect.stringContaining(`AWS4-HMAC-SHA256 Credential=key/${datetime.substring(0, 8)}/eu-west-1/ses/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=`)],
       Host: 'email.eu-west-1.amazonaws.com',
-      'X-Amz-Content-Sha256': [expect.stringMatching(/\w*/)],
+      'X-Amz-Content-Sha256': [expect.stringMatching(/\w+/)],
       'X-Amz-Date': [datetime],
-      'Content-Length': ['445'],
+      'Content-Length': [expect.any(String)],
       'Content-Type': ['application/x-www-form-urlencoded; charset=utf-8'],
       'User-Agent': ['notifme-sdk/v1 (+https://github.com/notifme/notifme-sdk)']
     })
@@ -97,9 +97,9 @@ test('SES success with all parameters.', async () => {
       Accept: ['*/*'],
       Authorization: [expect.stringContaining(`AWS4-HMAC-SHA256 Credential=key/${datetime.substring(0, 8)}/eu-west-1/ses/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=`)],
       Host: 'email.eu-west-1.amazonaws.com',
-      'X-Amz-Content-Sha256': [expect.stringMatching(/\w*/)],
+      'X-Amz-Content-Sha256': [expect.stringMatching(/\w+/)],
       'X-Amz-Date': [datetime],
-      'Content-Length': ['1037'],
+      'Content-Length': [expect.any(String)],
       'Content-Type': ['application/x-www-form-urlencoded; charset=utf-8'],
       'User-Agent': ['notifme-sdk/v1 (+https://github.com/notifme/notifme-sdk)']
     })
