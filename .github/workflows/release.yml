@@ -41,7 +41,9 @@ jobs:
       - name: Create changeset if needed
         id: changeset
         run: |
-          if [ -n "$(git status --porcelain .changeset/)" ]; then
+          # Check for any changeset files (not config or README)
+          CHANGESET_FILES=$(find .changeset -maxdepth 1 -type f ! -name 'config.json' ! -name 'README.md' 2>/dev/null | wc -l)
+          if [ "$CHANGESET_FILES" -gt 0 ]; then
             echo "has_changeset=true" >> $GITHUB_OUTPUT
           else
             echo "has_changeset=false" >> $GITHUB_OUTPUT
