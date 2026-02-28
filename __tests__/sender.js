@@ -64,3 +64,27 @@ test('Sender should send all notifications.', async () => {
     }
   })
 })
+
+test('Sender should call beforeSend hook.', async () => {
+  const beforeSend = jest.fn((request) => {
+    return { ...request, metadata: { ...request.metadata, modified: true } }
+  })
+  const senderWithHooks = new Sender(['email'], providers, strategies, { beforeSend })
+
+  await senderWithHooks.send({ email: { from: 'test@example.com', to: 'test2@example.com', subject: 'Test' } })
+
+  expect(beforeSend).toBeCalledWith({ email: { from: 'test@example.com', to: 'test2@example.com', subject: 'Test' } })
+  expect(providers.email[0].send).toBeCalledWith({ modified: true, from: 'test@example.com', to: 'test2@example.com', subject: 'Test' })
+})
+
+test('Sender should call afterSend hook.', async () => {
+  const afterSend = jest.fn((result) => {
+    return { ...result, info: { logged: true } }
+  })
+  const senderWithHooks = new Sender(['sms'], providers, strategies, { afterSend })
+
+  const result = await senderWithHooks.send({ sms: { from: '+15000000000', to: '+15000000001', text: 'Test' } })
+
+  expect(afterSend).toBeCalled()
+  expect(result.info).toEqual({ logged: true })
+})

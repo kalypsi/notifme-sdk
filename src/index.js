@@ -53,6 +53,15 @@ export type NotificationStatusType = {
   errors?: {[channel: ChannelType]: Error}
 }
 
+export type BeforeSendHook = (request: NotificationRequestType) => NotificationRequestType | Promise<NotificationRequestType>
+
+export type AfterSendHook = (result: NotificationStatusType) => NotificationStatusType | Promise<NotificationStatusType>
+
+export type HooksType = {|
+  beforeSend?: BeforeSendHook,
+  afterSend?: AfterSendHook
+|}
+
 export type ProviderStrategyType = 'no-fallback' | 'fallback' | 'roundrobin' // Defaults to fallback
 
 export type OptionsType = {|
@@ -86,6 +95,7 @@ export type OptionsType = {|
       multiProviderStrategy?: ProviderStrategyType
     }
   },
+  hooks?: HooksType,
   useNotificationCatcher?: boolean // if true channels are ignored
 |}
 
@@ -101,7 +111,8 @@ export default class NotifmeSdk {
     this.sender = new Sender(
       dedupe([...Object.keys(CHANNELS), ...Object.keys(providers)]),
       providers,
-      strategies
+      strategies,
+      mergedOptions.hooks
     )
   }
 

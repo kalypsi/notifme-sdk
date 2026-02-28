@@ -3,7 +3,7 @@ import logger from './util/logger'
 import ProviderLogger from './providers/logger'
 import Registry from './util/registry'
 // Types
-import type { NotificationRequestType, NotificationStatusType, ChannelType } from './index'
+import type { NotificationRequestType, NotificationStatusType, ChannelType, HooksType } from './index'
 import type { ProvidersType } from './providers'
 import type { StrategiesType } from './strategies/providers'
 
@@ -15,12 +15,14 @@ export default class Sender implements SenderType {
   channels: string[]
   providers: ProvidersType
   strategies: StrategiesType
+  hooks: ?HooksType
   senders: {[ChannelType]: (request: any) => Promise<{providerId: string, id: string}>}
 
-  constructor (channels: string[], providers: ProvidersType, strategies: StrategiesType) {
+  constructor (channels: string[], providers: ProvidersType, strategies: StrategiesType, hooks?: HooksType) {
     this.channels = channels
     this.providers = providers
     this.strategies = strategies
+    this.hooks = hooks
 
     // note : we can do this memoization because we do not allow to add new provider
     this.senders = Object.keys(strategies).reduce((acc, channel: any) => {
@@ -44,7 +46,13 @@ export default class Sender implements SenderType {
   }
 
   async send (request: NotificationRequestType): Promise<NotificationStatusType> {
-    const resultsByChannel = await this.sendOnEachChannel(request)
+    let modifiedRequest = request
+
+    if (this.hooks && this.hooks.beforeSend) {
+      modifiedRequest = await this.hooks.beforeSend(request)
+    }
+
+    const resultsByChannel = await this.sendOnEachChannel(modifiedRequest)
 
     const result = resultsByChannel.reduce((acc, { success, channel, providerId, ...rest }) => ({
       ...acc,
@@ -57,6 +65,10 @@ export default class Sender implements SenderType {
         : null
       )
     }), { status: 'success' })
+
+    if (this.hooks && this.hooks.afterSend) {
+      return await this.hooks.afterSend(result)
+    }
 
     return result
   }
