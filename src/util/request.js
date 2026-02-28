@@ -1,6 +1,6 @@
 /* @flow */
 /* global AbortController */
-import fetch from 'node-fetch'
+import fetch from './fetch'
 import HttpsProxyAgent from 'https-proxy-agent'
 
 const DEFAULT_TIMEOUT_MS = 10000
