@@ -2,6 +2,7 @@
 import logger from './util/logger'
 import ProviderLogger from './providers/logger'
 import Registry from './util/registry'
+import RateLimiter from './util/rateLimiter'
 // Types
 import type { NotificationRequestType, NotificationStatusType, ChannelType, HooksType } from './index'
 import type { ProvidersType } from './providers'
@@ -16,13 +17,15 @@ export default class Sender implements SenderType {
   providers: ProvidersType
   strategies: StrategiesType
   hooks: ?HooksType
+  rateLimiter: ?RateLimiter
   senders: {[ChannelType]: (request: any) => Promise<{providerId: string, id: string}>}
 
-  constructor (channels: string[], providers: ProvidersType, strategies: StrategiesType, hooks?: HooksType) {
+  constructor (channels: string[], providers: ProvidersType, strategies: StrategiesType, hooks?: HooksType, rateLimit?: Object) {
     this.channels = channels
     this.providers = providers
     this.strategies = strategies
     this.hooks = hooks
+    this.rateLimiter = rateLimit ? new RateLimiter(rateLimit) : null
 
     // note : we can do this memoization because we do not allow to add new provider
     this.senders = Object.keys(strategies).reduce((acc, channel: any) => {
@@ -84,6 +87,32 @@ export default class Sender implements SenderType {
         let modifiedChannelRequest = channelRequest
         if (this.hooks && this.hooks.channels && this.hooks.channels[channel] && this.hooks.channels[channel].beforeSend) {
           modifiedChannelRequest = await this.hooks.channels[channel].beforeSend(channelRequest)
+        }
+
+        // Check rate limit
+        if (this.rateLimiter) {
+          const rateLimiter = this.rateLimiter
+          const globalCheck = await rateLimiter.check('global')
+          if (!globalCheck.allowed) {
+            return {
+              channel,
+              success: false,
+              error: new Error(`Rate limit exceeded. Try again in ${globalCheck.resetIn} seconds.`),
+              providerId: undefined,
+              rateLimited: true
+            }
+          }
+
+          const channelCheck = await rateLimiter.check(channel)
+          if (!channelCheck.allowed) {
+            return {
+              channel,
+              success: false,
+              error: new Error(`Rate limit exceeded for ${channel}. Try again in ${channelCheck.resetIn} seconds.`),
+              providerId: undefined,
+              rateLimited: true
+            }
+          }
         }
 
         try {

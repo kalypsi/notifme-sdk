@@ -145,3 +145,37 @@ test('Sender should call per-channel onError hook.', async () => {
   expect(channelOnError).toBeCalled()
   expect(globalOnError).not.toBeCalled()
 })
+
+test('Sender should enforce global rate limit.', async () => {
+  const senderWithRateLimit = new Sender(['sms'], providers, strategies, {}, {
+    global: { max: 0, window: 60 }
+  })
+
+  // $FlowIgnore - testing rate limit
+  const result = await senderWithRateLimit.send({ sms: { from: '+15000000000', to: '+15000000001', text: 'Test' } })
+
+  expect(result.status).toBe('error')
+  expect(result.errors.sms).toContain('Rate limit exceeded')
+})
+
+test('Sender should enforce channel rate limit.', async () => {
+  const senderWithRateLimit = new Sender(['sms'], providers, strategies, {}, {
+    sms: { max: 0, window: 60 }
+  })
+
+  // $FlowIgnore - testing rate limit
+  const result = await senderWithRateLimit.send({ sms: { from: '+15000000000', to: '+15000000001', text: 'Test' } })
+
+  expect(result.status).toBe('error')
+  expect(result.errors.sms).toContain('Rate limit exceeded')
+})
+
+test('Sender should allow request when under rate limit.', async () => {
+  const senderWithRateLimit = new Sender(['sms'], providers, strategies, {}, {
+    sms: { max: 10, window: 60 }
+  })
+
+  const result = await senderWithRateLimit.send({ sms: { from: '+15000000000', to: '+15000000001', text: 'Test' } })
+
+  expect(result.status).toBe('success')
+})

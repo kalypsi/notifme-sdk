@@ -212,6 +212,21 @@ export type OptionsType = {|
   },
   plugins?: NotifmePlugin[],
   hooks?: HooksType,
+  rateLimit?: {
+    global?: {
+      max: number,
+      window: number // in seconds
+    },
+    channels?: {
+      email?: { max: number, window: number },
+      sms?: { max: number, window: number },
+      push?: { max: number, window: number },
+      webpush?: { max: number, window: number },
+      voice?: { max: number, window: number },
+      slack?: { max: number, window: number },
+      whatsapp?: { max: number, window: number }
+    }
+  },
   useNotificationCatcher?: boolean // if true channels are ignored
 |}
 
@@ -226,12 +241,31 @@ export default class NotifmeSdk {
     const providers = providerFactory(combinedChannels)
     const strategies = strategyProvidersFactory(combinedChannels)
 
+    const rateLimitConfig = this.buildRateLimitConfig(options.rateLimit)
+
     this.sender = new Sender(
       dedupe([...Object.keys(CHANNELS), ...Object.keys(providers)]),
       providers,
       strategies,
-      mergedOptions.hooks
+      mergedOptions.hooks,
+      rateLimitConfig
     )
+  }
+
+  buildRateLimitConfig (rateLimit: ?Object): ?Object {
+    if (!rateLimit) return null
+    const config = {}
+    if (rateLimit.global) {
+      config.global = rateLimit.global
+    }
+    if (rateLimit.channels) {
+      for (const channel of Object.keys(CHANNELS)) {
+        if (rateLimit.channels[channel]) {
+          config[channel] = rateLimit.channels[channel]
+        }
+      }
+    }
+    return Object.keys(config).length > 0 ? config : null
   }
 
   convertPluginsToChannels (plugins: ?NotifmePlugin[]): ?Object {
