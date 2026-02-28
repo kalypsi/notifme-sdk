@@ -86,6 +86,99 @@ export type HooksType = {|
 
 export type ProviderStrategyType = 'no-fallback' | 'fallback' | 'roundrobin' // Defaults to fallback
 
+export type NotifmePlugin = {
+  id: string,
+  channel: ChannelType,
+  providers: Array<Object>,
+  strategy?: ProviderStrategyType
+}
+
+export type NotifmePluginCreator = (options: Object) => NotifmePlugin
+
+export function emailPlugin (config: {|
+  providers: EmailProviderType[],
+  multiProviderStrategy?: ProviderStrategyType
+|}): NotifmePlugin {
+  return {
+    id: 'email-plugin',
+    channel: 'email',
+    providers: config.providers,
+    strategy: config.multiProviderStrategy
+  }
+}
+
+export function smsPlugin (config: {|
+  providers: SmsProviderType[],
+  multiProviderStrategy?: ProviderStrategyType
+|}): NotifmePlugin {
+  return {
+    id: 'sms-plugin',
+    channel: 'sms',
+    providers: config.providers,
+    strategy: config.multiProviderStrategy
+  }
+}
+
+export function pushPlugin (config: {|
+  providers: PushProviderType[],
+  multiProviderStrategy?: ProviderStrategyType
+|}): NotifmePlugin {
+  return {
+    id: 'push-plugin',
+    channel: 'push',
+    providers: config.providers,
+    strategy: config.multiProviderStrategy
+  }
+}
+
+export function webpushPlugin (config: {|
+  providers: WebpushProviderType[],
+  multiProviderStrategy?: ProviderStrategyType
+|}): NotifmePlugin {
+  return {
+    id: 'webpush-plugin',
+    channel: 'webpush',
+    providers: config.providers,
+    strategy: config.multiProviderStrategy
+  }
+}
+
+export function voicePlugin (config: {|
+  providers: VoiceProviderType[],
+  multiProviderStrategy?: ProviderStrategyType
+|}): NotifmePlugin {
+  return {
+    id: 'voice-plugin',
+    channel: 'voice',
+    providers: config.providers,
+    strategy: config.multiProviderStrategy
+  }
+}
+
+export function slackPlugin (config: {|
+  providers: SlackProviderType[],
+  multiProviderStrategy?: ProviderStrategyType
+|}): NotifmePlugin {
+  return {
+    id: 'slack-plugin',
+    channel: 'slack',
+    providers: config.providers,
+    strategy: config.multiProviderStrategy
+  }
+}
+
+export function whatsappPlugin (config: {|
+  providers: WhatsappProviderType[],
+  multiProviderStrategy?: ProviderStrategyType
+|}): NotifmePlugin {
+  return {
+    id: 'whatsapp-plugin',
+    channel: 'whatsapp',
+    providers: config.providers,
+    strategy: config.multiProviderStrategy
+  }
+}
+
 export type OptionsType = {|
   channels?: {
     email?: {
@@ -117,6 +210,7 @@ export type OptionsType = {|
       multiProviderStrategy?: ProviderStrategyType
     }
   },
+  plugins?: NotifmePlugin[],
   hooks?: HooksType,
   useNotificationCatcher?: boolean // if true channels are ignored
 |}
@@ -127,8 +221,10 @@ export default class NotifmeSdk {
 
   constructor (options: OptionsType) {
     const mergedOptions = this.mergeWithDefaultConfig(options)
-    const providers = providerFactory(mergedOptions.channels)
-    const strategies = strategyProvidersFactory(mergedOptions.channels)
+    const channelsFromPlugins = this.convertPluginsToChannels(options.plugins)
+    const combinedChannels = { ...mergedOptions.channels, ...channelsFromPlugins }
+    const providers = providerFactory(combinedChannels)
+    const strategies = strategyProvidersFactory(combinedChannels)
 
     this.sender = new Sender(
       dedupe([...Object.keys(CHANNELS), ...Object.keys(providers)]),
@@ -136,6 +232,19 @@ export default class NotifmeSdk {
       strategies,
       mergedOptions.hooks
     )
+  }
+
+  convertPluginsToChannels (plugins: ?NotifmePlugin[]): ?Object {
+    if (!plugins || plugins.length === 0) {
+      return null
+    }
+    return plugins.reduce((acc, plugin) => {
+      acc[plugin.channel] = {
+        providers: plugin.providers,
+        multiProviderStrategy: plugin.strategy || 'fallback'
+      }
+      return acc
+    }, {})
   }
 
   mergeWithDefaultConfig ({ channels, ...rest }: OptionsType) {

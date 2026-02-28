@@ -154,3 +154,88 @@ test('useNotificationCatcher should be disabled in production by default.', () =
 
   process.env.NODE_ENV = previousNodeEnv
 })
+
+test('convertPluginsToChannels should convert plugins to channels format.', () => {
+  const plugins = [
+    { id: 'email-plugin', channel: 'email', providers: [{ type: 'sendgrid' }], strategy: 'roundrobin' },
+    { id: 'sms-plugin', channel: 'sms', providers: [{ type: 'twilio' }] }
+  ]
+  const result = sdk.convertPluginsToChannels(plugins)
+  expect(result).toEqual({
+    email: { providers: [{ type: 'sendgrid' }], multiProviderStrategy: 'roundrobin' },
+    sms: { providers: [{ type: 'twilio' }], multiProviderStrategy: 'fallback' }
+  })
+})
+
+test('convertPluginsToChannels should return null for empty plugins.', () => {
+  expect(sdk.convertPluginsToChannels(null)).toBeNull()
+  expect(sdk.convertPluginsToChannels([])).toBeNull()
+})
+
+test('NotifmeSdk should accept plugins option.', () => {
+  const sdkWithPlugins = new NotifmeSdk({
+    plugins: [
+      { id: 'email-plugin', channel: 'email', providers: [{ type: 'logger' }], strategy: 'no-fallback' }
+    ]
+  })
+  expect(sdkWithPlugins.sender).toBeDefined()
+})
+
+test('emailPlugin should create correct plugin object.', () => {
+  const { emailPlugin } = require('../src')
+  // $FlowIgnore - testing plugin function
+  const plugin = emailPlugin({ providers: [{ type: 'sendgrid', apiKey: 'test' }], multiProviderStrategy: 'roundrobin' })
+  expect(plugin.id).toBe('email-plugin')
+  expect(plugin.channel).toBe('email')
+  expect(plugin.providers).toEqual([{ type: 'sendgrid', apiKey: 'test' }])
+  expect(plugin.strategy).toBe('roundrobin')
+})
+
+test('smsPlugin should create correct plugin object.', () => {
+  const { smsPlugin } = require('../src')
+  // $FlowIgnore - testing plugin function
+  const plugin = smsPlugin({ providers: [{ type: 'twilio', accountSid: 'test', authToken: 'test' }] })
+  expect(plugin.id).toBe('sms-plugin')
+  expect(plugin.channel).toBe('sms')
+  expect(plugin.strategy).toBeUndefined()
+})
+
+test('pushPlugin should create correct plugin object.', () => {
+  const { pushPlugin } = require('../src')
+  // $FlowIgnore - testing plugin function
+  const plugin = pushPlugin({ providers: [{ type: 'fcm', key: 'test' }], multiProviderStrategy: 'no-fallback' })
+  expect(plugin.id).toBe('push-plugin')
+  expect(plugin.channel).toBe('push')
+})
+
+test('webpushPlugin should create correct plugin object.', () => {
+  const { webpushPlugin } = require('../src')
+  // $FlowIgnore - testing plugin function
+  const plugin = webpushPlugin({ providers: [{ type: 'gcm', key: 'test' }] })
+  expect(plugin.id).toBe('webpush-plugin')
+  expect(plugin.channel).toBe('webpush')
+})
+
+test('voicePlugin should create correct plugin object.', () => {
+  const { voicePlugin } = require('../src')
+  // $FlowIgnore - testing plugin function
+  const plugin = voicePlugin({ providers: [{ type: 'twilio', accountSid: 'test', authToken: 'test' }] })
+  expect(plugin.id).toBe('voice-plugin')
+  expect(plugin.channel).toBe('voice')
+})
+
+test('slackPlugin should create correct plugin object.', () => {
+  const { slackPlugin } = require('../src')
+  // $FlowIgnore - testing plugin function
+  const plugin = slackPlugin({ providers: [{ type: 'incoming-webhook', url: 'test' }] })
+  expect(plugin.id).toBe('slack-plugin')
+  expect(plugin.channel).toBe('slack')
+})
+
+test('whatsappPlugin should create correct plugin object.', () => {
+  const { whatsappPlugin } = require('../src')
+  // $FlowIgnore - testing plugin function
+  const plugin = whatsappPlugin({ providers: [{ type: 'infobip', apiKey: 'test', baseUrl: 'test' }] })
+  expect(plugin.id).toBe('whatsapp-plugin')
+  expect(plugin.channel).toBe('whatsapp')
+})
