@@ -1,5 +1,6 @@
 [ignore]
 <PROJECT_ROOT>/lib/.*
+<PROJECT_ROOT>/node_modules/maildev/config.json
 <PROJECT_ROOT>/node_modules/array.prototype.reduce/node_modules/es-abstract/tsconfig.tmp.json
 <PROJECT_ROOT>/node_modules/arraybuffer.prototype.slice/node_modules/es-abstract/tsconfig.tmp.json
 <PROJECT_ROOT>/node_modules/function.prototype.name/node_modules/es-abstract/tsconfig.tmp.json

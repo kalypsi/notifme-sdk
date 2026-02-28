@@ -88,3 +88,60 @@ test('Sender should call afterSend hook.', async () => {
   expect(afterSend).toBeCalled()
   expect(result.info).toEqual({ logged: true })
 })
+
+test('Sender should call per-channel beforeSend hook.', async () => {
+  const emailBeforeSend = jest.fn((request) => ({ ...request, custom: 'email-hook' }))
+  const senderWithHooks = new Sender(['email', 'sms'], providers, strategies, {
+    channels: {
+      email: { beforeSend: emailBeforeSend }
+    }
+  })
+
+  // $FlowIgnore - testing partial request
+  await senderWithHooks.send({ email: { from: 'test@example.com', to: 'test2@example.com', subject: 'Test' } })
+
+  expect(emailBeforeSend).toBeCalledWith({ from: 'test@example.com', to: 'test2@example.com', subject: 'Test' })
+  expect(providers.email[0].send).toBeCalledWith({ from: 'test@example.com', to: 'test2@example.com', subject: 'Test', custom: 'email-hook' })
+})
+
+test('Sender should call per-channel afterSend hook.', async () => {
+  const emailAfterSend = jest.fn()
+  const senderWithHooks = new Sender(['email'], providers, strategies, {
+    channels: {
+      email: { afterSend: emailAfterSend }
+    }
+  })
+
+  // $FlowIgnore - testing partial request
+  await senderWithHooks.send({ email: { from: 'test@example.com', to: 'test2@example.com', subject: 'Test' } })
+
+  expect(emailAfterSend).toBeCalled()
+})
+
+test('Sender should call onError hook on failure.', async () => {
+  const onError = jest.fn()
+  const senderWithHooks = new Sender(['webpush'], providers, strategies, { onError })
+
+  // $FlowIgnore - testing error case
+  await senderWithHooks.send({ webpush: { subscription: { endpoint: 'test', keys: { auth: 'a', p256dh: 'b' } }, title: 'Test', body: 'Test body' } })
+
+  expect(onError).toBeCalled()
+  expect(onError.mock.calls[0][1]).toBe('webpush')
+})
+
+test('Sender should call per-channel onError hook.', async () => {
+  const channelOnError = jest.fn()
+  const globalOnError = jest.fn()
+  const senderWithHooks = new Sender(['webpush'], providers, strategies, {
+    onError: globalOnError,
+    channels: {
+      webpush: { onError: channelOnError }
+    }
+  })
+
+  // $FlowIgnore - testing error case
+  await senderWithHooks.send({ webpush: { subscription: { endpoint: 'test', keys: { auth: 'a', p256dh: 'b' } }, title: 'Test', body: 'Test body' } })
+
+  expect(channelOnError).toBeCalled()
+  expect(globalOnError).not.toBeCalled()
+})

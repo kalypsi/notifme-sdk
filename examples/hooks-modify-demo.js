@@ -7,8 +7,8 @@ const notifmeSdk = new NotifmeSdk({
   useNotificationCatcher: true,
   hooks: {
     beforeSend: (request) => {
-      console.log('📥 Original request:', request.email?.subject)
-      
+      console.log('📥 Original request:', request.email && request.email.subject)
+
       const modifiedRequest = {
         ...request,
         metadata: {
@@ -21,13 +21,13 @@ const notifmeSdk = new NotifmeSdk({
           subject: `[MODIFIED] ${request.email.subject}`
         } : undefined
       }
-      
-      console.log('📥 Modified request:', modifiedRequest.email?.subject)
+
+      console.log('📥 Modified request:', modifiedRequest.email && modifiedRequest.email.subject)
       return modifiedRequest
     },
     afterSend: (result) => {
       console.log('📤 Result status:', result.status)
-      
+
       return {
         ...result,
         info: {

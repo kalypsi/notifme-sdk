@@ -57,9 +57,31 @@ export type BeforeSendHook = (request: NotificationRequestType) => NotificationR
 
 export type AfterSendHook = (result: NotificationStatusType) => NotificationStatusType | Promise<NotificationStatusType>
 
+export type BeforeSendChannelHook = (request: mixed) => mixed | Promise<mixed>
+
+export type AfterSendChannelHook = (result: mixed) => mixed | Promise<mixed>
+
+export type ErrorHook = (error: Error, channel: ChannelType, request: mixed) => mixed | Promise<mixed>
+
+export type ChannelHooksType = {|
+  beforeSend?: BeforeSendChannelHook,
+  afterSend?: AfterSendChannelHook,
+  onError?: ErrorHook
+|}
+
 export type HooksType = {|
   beforeSend?: BeforeSendHook,
-  afterSend?: AfterSendHook
+  afterSend?: AfterSendHook,
+  onError?: ErrorHook,
+  channels?: {
+    email?: ChannelHooksType,
+    sms?: ChannelHooksType,
+    push?: ChannelHooksType,
+    webpush?: ChannelHooksType,
+    voice?: ChannelHooksType,
+    slack?: ChannelHooksType,
+    whatsapp?: ChannelHooksType
+  }
 |}
 
 export type ProviderStrategyType = 'no-fallback' | 'fallback' | 'roundrobin' // Defaults to fallback

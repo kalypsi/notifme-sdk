@@ -66,24 +66,45 @@ export default class Sender implements SenderType {
       )
     }), { status: 'success' })
 
+    let finalResult = result
+
     if (this.hooks && this.hooks.afterSend) {
-      return await this.hooks.afterSend(result)
+      finalResult = await this.hooks.afterSend(result)
     }
 
-    return result
+    return finalResult
   }
 
   async sendOnEachChannel (request: NotificationRequestType): Promise<Object[]> {
     return Promise.all(Object.keys(request)
       .filter((channel) => this.channels.includes(channel))
       .map(async (channel: any) => {
+        const channelRequest = { ...request.metadata, ...request[channel] }
+
+        let modifiedChannelRequest = channelRequest
+        if (this.hooks && this.hooks.channels && this.hooks.channels[channel] && this.hooks.channels[channel].beforeSend) {
+          modifiedChannelRequest = await this.hooks.channels[channel].beforeSend(channelRequest)
+        }
+
         try {
+          const sendResult = await this.senders[channel](modifiedChannelRequest)
+
+          if (this.hooks && this.hooks.channels && this.hooks.channels[channel] && this.hooks.channels[channel].afterSend) {
+            await this.hooks.channels[channel].afterSend(sendResult)
+          }
+
           return {
             success: true,
             channel,
-            ...await this.senders[channel]({ ...request.metadata, ...request[channel] })
+            ...sendResult
           }
         } catch (error) {
+          if (this.hooks && this.hooks.channels && this.hooks.channels[channel] && this.hooks.channels[channel].onError) {
+            await this.hooks.channels[channel].onError(error, channel, modifiedChannelRequest)
+          } else if (this.hooks && this.hooks.onError) {
+            await this.hooks.onError(error, channel, modifiedChannelRequest)
+          }
+
           return { channel, success: false, error: error, providerId: error.providerId }
         }
       }))
