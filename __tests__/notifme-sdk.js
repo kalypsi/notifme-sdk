@@ -239,3 +239,24 @@ test('whatsappPlugin should create correct plugin object.', () => {
   expect(plugin.id).toBe('whatsapp-plugin')
   expect(plugin.channel).toBe('whatsapp')
 })
+
+test('NotifmeSdk.sendBatch should call sender send for each request.', async () => {
+  // $FlowIgnore - Jest mock typing
+  const mockSend = jest.fn().mockResolvedValue({ status: 'success' })
+  const sdkBatch = new NotifmeSdk({})
+  // $FlowIgnore
+  sdkBatch.sender = { send: mockSend }
+
+  const requests = [
+    { sms: { from: 'a', to: '1', text: 'Hello' } },
+    { email: { from: 'b', to: '2', subject: 'Hi' } }
+  ]
+
+  await sdkBatch.sendBatch(requests)
+
+  expect(mockSend).toHaveBeenCalledTimes(2)
+  // $FlowIgnore - Jest matcher typing
+  expect(mockSend).toHaveBeenNthCalledWith(1, requests[0])
+  // $FlowIgnore - Jest matcher typing
+  expect(mockSend).toHaveBeenNthCalledWith(2, requests[1])
+})

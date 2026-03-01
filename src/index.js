@@ -331,4 +331,8 @@ export default class NotifmeSdk {
   send (request: NotificationRequestType): Promise<NotificationStatusType> {
     return this.sender.send(request)
   }
+
+  async sendBatch (requests: NotificationRequestType[]): Promise<NotificationStatusType[]> {
+    return Promise.all(requests.map(request => this.sender.send(request)))
+  }
 }
