@@ -179,3 +179,34 @@ test('Sender should allow request when under rate limit.', async () => {
 
   expect(result.status).toBe('success')
 })
+
+test('Sender should retry on failure.', async () => {
+  let attempts = 0
+  const flakyProvider = {
+    id: 'flaky-provider',
+    send: async () => {
+      attempts++
+      if (attempts < 2) {
+        throw new Error('Temporary failure')
+      }
+      return 'success-id'
+    }
+  }
+  const smsOnlyProviders = {
+    sms: [flakyProvider],
+    email: [],
+    voice: [],
+    push: [],
+    webpush: []
+  }
+  const senderWithRetry = new Sender(['sms'], smsOnlyProviders, strategies, {}, {}, { maxAttempts: 3, delay: 10 })
+
+  // $FlowIgnore - testing retry functionality
+  const result = await senderWithRetry.send({ sms: { from: '+15000000000', to: '+15000000001', text: 'Test' } })
+
+  expect(attempts).toBe(2)
+  // $FlowIgnore
+  expect(result.status).toBe('success')
+  // $FlowIgnore
+  expect(result.channels.sms.id).toBe('success-id')
+})

@@ -227,6 +227,12 @@ export type OptionsType = {|
       whatsapp?: { max: number, window: number }
     }
   },
+  retry?: {
+    maxAttempts?: number,
+    delay?: number,
+    backoff?: 'linear' | 'exponential',
+    onRetry?: (attempt: number, error: Error) => void
+  },
   useNotificationCatcher?: boolean // if true channels are ignored
 |}
 
@@ -248,7 +254,8 @@ export default class NotifmeSdk {
       providers,
       strategies,
       mergedOptions.hooks,
-      rateLimitConfig
+      rateLimitConfig,
+      options.retry
     )
   }
 

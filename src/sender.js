@@ -3,6 +3,7 @@ import logger from './util/logger'
 import ProviderLogger from './providers/logger'
 import Registry from './util/registry'
 import RateLimiter from './util/rateLimiter'
+import withRetry from './util/retry'
 // Types
 import type { NotificationRequestType, NotificationStatusType, ChannelType, HooksType } from './index'
 import type { ProvidersType } from './providers'
@@ -18,14 +19,16 @@ export default class Sender implements SenderType {
   strategies: StrategiesType
   hooks: ?HooksType
   rateLimiter: ?RateLimiter
+  retry: ?Object
   senders: {[ChannelType]: (request: any) => Promise<{providerId: string, id: string}>}
 
-  constructor (channels: string[], providers: ProvidersType, strategies: StrategiesType, hooks?: HooksType, rateLimit?: Object) {
+  constructor (channels: string[], providers: ProvidersType, strategies: StrategiesType, hooks?: HooksType, rateLimit?: Object, retry?: Object) {
     this.channels = channels
     this.providers = providers
     this.strategies = strategies
     this.hooks = hooks
     this.rateLimiter = rateLimit ? new RateLimiter(rateLimit) : null
+    this.retry = retry
 
     // note : we can do this memoization because we do not allow to add new provider
     this.senders = Object.keys(strategies).reduce((acc, channel: any) => {
@@ -116,7 +119,10 @@ export default class Sender implements SenderType {
         }
 
         try {
-          const sendResult = await this.senders[channel](modifiedChannelRequest)
+          const sendFn = () => this.senders[channel](modifiedChannelRequest)
+          const sendResult = this.retry
+            ? await withRetry(sendFn, this.retry)
+            : await sendFn()
 
           if (this.hooks && this.hooks.channels && this.hooks.channels[channel] && this.hooks.channels[channel].afterSend) {
             await this.hooks.channels[channel].afterSend(sendResult)
